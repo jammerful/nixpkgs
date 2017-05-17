@@ -10939,9 +10939,14 @@ with pkgs;
 
   nginxModules = callPackage ../servers/http/nginx/modules.nix { };
 
-  # We should move to dynmaic modules and create a nginxFull package with all modules
   nginxShibboleth = callPackage ../servers/http/nginx/stable.nix {
     modules = [ nginxModules.rtmp nginxModules.dav nginxModules.moreheaders nginxModules.shibboleth ];
+  };
+
+  nginxFull = callPackage ../servers/http/nginx/stable.nix {
+    modules = lib.attrValues nginxModules;
+    useDynamicModules = true;
+    suppportedPlatforms = stdenv.lib.platforms.linux;
   };
 
   ngircd = callPackage ../servers/irc/ngircd { };

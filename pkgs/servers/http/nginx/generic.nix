@@ -3,11 +3,16 @@
 , withStream ? false
 , modules ? []
 , hardening ? true
-, version, sha256, ...
+, version, sha256
+, useDynamicModules ? false
+, supportedPlatforms ? stdenv.lib.platforms.all, ...
 }:
 
 with stdenv.lib;
 
+let
+  moduleConfigureFlag = if useDynamicModules then "--add-dynamic-module" else "--add-module";
+in
 stdenv.mkDerivation {
   name = "nginx-${version}";
 
@@ -45,7 +50,7 @@ stdenv.mkDerivation {
   ] ++ optional withStream "--with-stream"
     ++ optional (gd != null) "--with-http_image_filter_module"
     ++ optional (elem stdenv.system (with platforms; linux ++ freebsd)) "--with-file-aio"
-    ++ map (mod: "--add-module=${mod.src}") modules;
+    ++ map (mod: "${moduleConfigureFlag}=${mod.src}") modules;
 
   NIX_CFLAGS_COMPILE = [ "-I${libxml2.dev}/include/libxml2" ] ++ optional stdenv.isDarwin "-Wno-error=deprecated-declarations";
 
@@ -61,7 +66,7 @@ stdenv.mkDerivation {
     description = "A reverse proxy and lightweight webserver";
     homepage    = http://nginx.org;
     license     = licenses.bsd2;
-    platforms   = platforms.all;
+    platforms   = supportedPlatforms;
     maintainers = with maintainers; [ thoughtpolice raskin fpletz ];
   };
 }
